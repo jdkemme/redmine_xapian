@@ -113,7 +113,6 @@ class Repofile < ActiveRecord::Base
         repofile.url = attributes[:url]
         repofile.revision = attributes[:revision]
         results << repofile
-        Redmine::Search.cache_store.delete(key)
       end
     end  
     results
