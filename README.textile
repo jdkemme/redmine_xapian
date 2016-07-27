@@ -1,6 +1,6 @@
 h1. Redmine Xapian search plugin
 
-The current version of Redmine Xapian is **1.6.4**
+The current version of Redmine Xapian is **1.6.5**
 With this plugin you will be able to make searches by file name and by strings inside your documents through the Xapian search engine.
 This plugin can also index the files located in your repositories.
 This plugin replaces search controller, its view and search methods.
@@ -35,10 +35,10 @@ From "Omega documentation":http://xapian.org/docs/omega/overview.html:
     * DjVu files (.djv, .djvu) if djvutxt is available
     * XPS files (.xps) if unzip is available
 
-On debian you can use this command to install required indexing tools:
+On Debian you can use following command to install required indexing tools:
 
 <pre>
-# sudo apt-get install xapian-omega libxapian-dev xpdf xpdf-utils antiword unzip \
+# sudo apt-get install xapian-omega libxapian-dev xpdf poppler-utils antiword unzip \
 catdoc libwpd-tools libwps-tools gzip unrtf catdvi djview djview3 uuid uuid-dev
 </pre>
 
@@ -66,11 +66,18 @@ First at all, go to the Redmine interface and in the plugins section configure t
 To use stemmed languages in searches, Xapian needs to generate stemmed forms for each language and store them in a database.
 Before you can use the plugin, you have to populate the Xapian databases for each stemmed language you want to use. From plugin version 1.6 a new script (xapian_indexer.rb) is included in the extra directory that is use to populate Xapian databases. This script is a wrapper for omindex binary, so omindex should not to be used anymore.
 
-First edit the script file and configure the required variables, they are self-explanatory and most of them can be specified and overwritten through the command line. 
+First edit the script file and configure the required variables, they are self-explanatory and most of them can be specified and overwritten through the command line.
 
 To view command line help simply run "xapian_index.rb -h". To view the complete process you can run it using verbose flag (-v).
 
 Note, that the first time you index a repository it can take a long time. After the first indexation the process is much faster.
+You have to take into account that the script needs a defined repository identifier for all repositories that will be indexed. The repository identifier is not required in redmine and can have null value for some of the repositories, so before indexing a repository you have to be sure that the repository has a defined identifier, otherwise the script will ignore it.
+
+There is a rake task for setting up a default identifier for your repositories:
+
+<pre>
+bundle exec rake redmine:xapian_set_identifiers identifier='main' RAILS_ENV="production"
+</pre>
 
 Examples running the script:
 
@@ -103,12 +110,17 @@ Indexing repositories of some projects:
 Once you have tested the script functionality, you can configure it for running every day at nights keeping your Xapian database up to date, for example:
 
 <pre>
-@daily * * * * /usr/bin/xapian_indexer.rb
+@daily www-data ruby /usr/bin/xapian_indexer.rb
 </pre>
-
 
 After files indexing and the plugin setup in the settings you can search attachments by name and content.
 
-To perform searches in a particular module such as Files, Documents,... it is 
-mandatory to enable these modules in your projects and to have corresponding 
+To perform searches in a particular module such as Files, Documents,... it is
+mandatory to enable these modules in your projects and to have corresponding
 permissions view_*; Be sure it is checked.
+
+There is a one hook allowing plugins to implement a quick jump to an object:
+
+<pre>
+:controller_search_quick_jump
+</pre>
